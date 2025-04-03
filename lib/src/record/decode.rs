@@ -160,6 +160,22 @@ impl Record {
         root
     }
 
+    #[cfg(feature = "collateral_manager")]
+    fn basic_decode_cm<T: CollateralTree>(&self, cm: &mut CollateralManager<T>) -> Node {
+        let mut record = Node::record(self.header.record_type().unwrap_or("record"));
+        record.add(Node::from(&self.header));
+
+        let mut root = Node::root();
+        let record_root = if let Some(custom_root) = self.header.get_root_path_cm(cm) {
+            root.create_hierarchy(&custom_root)
+        } else {
+            &mut root
+        };
+
+        record_root.add(record);
+        root
+    }
+
     /// Decodes a section of the [Record] located at the given `offset` into a [Node] tree using
     /// an arbitrary decode definition stored in the collateral tree.
     #[cfg(feature = "collateral_manager")]
@@ -193,11 +209,25 @@ impl Record {
     /// Decodes the whole [Record] into a [Node] tree using the decode definitions stored in the
     /// collateral tree.
     #[cfg(feature = "collateral_manager")]
-    pub fn decode<T: CollateralTree>(&self, cm: &mut CollateralManager<T>) -> Result<Node, Error> {
-        if let record_types::PCORE | record_types::ECORE = self.header.version.record_type {
-            return self.decode_as_core_record(cm);
-        }
+    pub fn decode<T: CollateralTree>(&self, cm: &mut CollateralManager<T>) -> Node {
+        let root =
+            if let record_types::PCORE | record_types::ECORE = self.header.version.record_type {
+                self.decode_as_core_record(cm)
+            } else {
+                self.decode_with_decode_def(cm, "layout.csv", 0)
+            };
 
-        self.decode_with_decode_def(cm, "layout.csv", 0)
+        match root {
+            Ok(node) => node,
+            Err(err) => {
+                if let Error::MissingDecodeDefinitions(version) = err {
+                    log::warn!("Missing Decode defintions for {version} using basic decode");
+                    self.basic_decode_cm(cm)
+                } else {
+                    log::warn!("Cannot decode record: {err}");
+                    self.basic_decode()
+                }
+            }
+        }
     }
 }
