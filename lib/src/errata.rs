@@ -33,7 +33,9 @@ pub struct Errata {
 
 const GNR_SP_PRODUCT_ID: u32 = 0x2f;
 const SRF_SP_PRODUCT_ID: u32 = 0x82;
-pub(crate) const SERVER_LEGACY_PRODUCT_IDS: [u32; 2] = [GNR_SP_PRODUCT_ID, SRF_SP_PRODUCT_ID];
+const CWF_SP_PRODUCT_ID: u32 = 0x8e;
+pub(crate) const SERVER_LEGACY_PRODUCT_IDS: [u32; 3] =
+    [GNR_SP_PRODUCT_ID, SRF_SP_PRODUCT_ID, CWF_SP_PRODUCT_ID];
 
 impl Errata {
     pub fn from_version(version: &Version) -> Self {
