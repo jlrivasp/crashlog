@@ -1,0 +1,20 @@
+{
+    "fullname": "clearwaterforest",
+    "product": "CWF",
+    "product_id": "0x8E",
+    "subproducts": [
+        {
+            "product": "DKT",
+            "stepping": "all",
+            "variant": "all"
+        }
+    ],
+    "variant": "SP",
+    "die_id": {
+        "0": "io0",
+        "4": "io1",
+        "9": "compute0",
+        "10": "compute1",
+        "11": "compute2"
+    }
+}
